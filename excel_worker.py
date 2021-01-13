@@ -1,6 +1,15 @@
 from openpyxl import load_workbook, Workbook
 from openpyxl.worksheet.worksheet import Worksheet
+from openpyxl.cell.cell import Cell
 from datetime import date, timedelta
+
+
+def clear_blank_rows(worksheet):
+    for i in worksheet.iter_rows():
+        cell: Cell = i[0]
+        if not cell.internal_value:
+            worksheet.delete_rows(cell.row, 10000)
+            break
 
 
 def get_date_from_term(term: str) -> date:
@@ -26,13 +35,15 @@ class ExcelBook:
 
     def add_to_unlisted(self, row):
         wb = self.get_wb()
-        unlisted_ws = wb[self.unlisted_name]
+        unlisted_ws: Worksheet = wb[self.unlisted_name]
+        clear_blank_rows(unlisted_ws)
         unlisted_ws.append(row)
         wb.save(self.wb_name)
 
     def add_to_reserve(self, row):
         wb = self.get_wb()
         in_reserve_ws = wb[self.in_reserve_name]
+        clear_blank_rows(in_reserve_ws)
         in_reserve_ws.append(row)
         wb.save(self.wb_name)
 
@@ -47,6 +58,8 @@ class ExcelBook:
             records.append(record)
         cols = zip(*records)
         results = [int(sum(i)) for i in cols]
+        if not results:
+            results = [0, 0, 0, 0]
         return results
 
     def get_unlisted(self, term: str):
@@ -68,4 +81,6 @@ class ExcelBook:
 
         cols = zip(*fit_records)
         results = [int(sum(i)) for i in cols]
+        if not results:
+            results = [0, 0, 0, 0]
         return results
